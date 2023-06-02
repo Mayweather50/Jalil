@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="MySQLConnect.View.Config.BreaksWindow"
+        Title="Настройка времени" Width="800" Height="450" CanResize="False">
+	<Window.Styles>
+		<Style Selector="TimePicker">
+			<Setter Property="HorizontalAlignment" Value="Left"/>
+			<Setter Property="MinuteIncrement" Value="5"/>
+			<Setter Property="Margin" Value="10 0 0 0"/>
+		</Style>
+		<Style Selector="TextBlock">
+			<Setter Property="HorizontalAlignment" Value="Right"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="TextWrapping" Value="Wrap"/>
+		</Style>
+		<Style Selector="NumericUpDown">
+			<Setter Property="Increment" Value="5"/>
+			<Setter Property="Minimum" Value="5"/>
+			<Setter Property="AllowSpin" Value="False"/>
+			<Setter Property="ShowButtonSpinner" Value="False"/>
+			<Setter Property="Height" Value="10"/>
+			<Setter Property="Width" Value="10"/>
+			<Setter Property="Margin" Value="10 0 10 0"/>
+			<Setter Property="HorizontalAlignment" Value="Left"/>
+		</Style>
+	</Window.Styles>
+	<Grid RowDefinitions="*,*,*,*,*,*" ShowGridLines="False" ColumnDefinitions="150,*,150">
+		<TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="Редактирование времени"
+				   FontSize="28" HorizontalAlignment="Left" FontWeight="Bold"
+				   Margin="50 0 0 0"/>
+		
+		<TextBlock Grid.Column="0" Grid.Row="1" Text="Начало занятий "/>
+		<TimePicker Grid.Column="1" Grid.Row="1" SelectedTime="{Binding startDay}"/>
+
+		<TextBlock Grid.Column="0" Grid.Row="2" Text="Перемена между уроками "/>
+		<NumericUpDown Grid.Column="1" Grid.Row="2" Value="{Binding lessonsBreak}"/>
+
+		<TextBlock Grid.Column="0" Grid.Row="3" Text="Перемена между парами "/>
+		<NumericUpDown Grid.Column="1" Grid.Row="3" Value="{Binding lectureBreak}"/>
+
+		<TextBlock Grid.Column="0" Grid.Row="4" Text="Обеденный перерыв "/>
+		<NumericUpDown Grid.Column="1" Grid.Row="4" Value="{Binding lunchBreak}"/>
+		
+		<Button Grid.Column="1" Grid.Row="5" Content="Сохранить"
+				HorizontalAlignment="Center" Command="{Binding SaveTime}"/>
+	</Grid>
+</Window>
