@@ -35,7 +35,7 @@ namespace MySQLConnect.Model.Core
                     };
                     Label label = new Label()
                     {
-                        Content = $"{thisWeek[day][para].Subject}",
+                        Content = $"{thisWeek[day][para].Subject}\n{thisWeek[day][para].Teacher}\n{thisWeek[day][para].Room}",
                         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
                     };
                     border.Child = label;

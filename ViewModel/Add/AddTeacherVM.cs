@@ -82,8 +82,8 @@ namespace MySQLConnect.ViewModel.Add
             {
                 return new ActionCommand(() =>
                 {
-                    if (!MySqlHandler.CheckDupl("_teachers", "fullName", FullName))
-                        MySqlHandler.WriteTeacher(FullName, (string)selectType.Content, (string)selectState.Content, TimeJob, (string)selectGroup.Content, (string)selectSubj.Content);
+                    if (!MySqlHandler.CheckDupl("teachers", "fullname", FullName))
+                        MySqlHandler.WriteTeacher(FullName, (string)selectState.Content, TimeJob);
                 });
             }
         }

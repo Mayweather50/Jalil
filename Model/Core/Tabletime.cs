@@ -16,16 +16,16 @@ namespace MySQLConnect.Model.Core
         static public Dictionary<int, List<Subject>> subjects = new Dictionary<int, List<Subject>>();
         static public List<string> teachers = new List<string>();
         static public List<Room> rooms = new List<Room>();
-        static private int lessonInWeek = 3; // пар в день
-        static private int semestrDays = 102; // Дней в семестре
-        static private int semestrPar = semestrDays * lessonInWeek; // 17 недель
+        static private int parInWeek = 3; // пар в день
+        static private int semestrDays = 99; // Дней в семестре
+        static private int semestrPar = semestrDays * parInWeek; // 17 недель
         static private Grid tableTime; // Таблица в любом случае определяется при запуске приложения
         static public int idChoosedGroup;
 
-        static public void Start(Grid grid)
+        static public void Start(Grid grid, int semestr)
         {
             tableTime = grid;
-            MySqlHandler.GetData4TableTime();
+            MySqlHandler.GetData4TableTime(semestr);
             FirstGenerate();
         }
         static private void FirstGenerate() // Первичная генерация предмета с наибольшим кол-вом часов
@@ -33,80 +33,89 @@ namespace MySQLConnect.Model.Core
             raspisanie.Clear();
             foreach(int gr in idGroups)
             {
+                if (subjects[gr].Count == 0) continue;
                 raspisanie.Add(gr, new Lesson[semestrPar]); // добавление массива для группы
                 int subjPar = subjects[gr][0].TotalHours / 2; // количество пар одного предмета
                 int step = semestrPar / subjPar; // Шаг с которым необходимо расставить предмет
                 for (int i = 0; i < subjPar; i++) // FOR по количеству пар
                 {
-                    if (Check(i * step, subjects[gr][0].Name))
+                    for(int teachIndex = 0; teachIndex < teachers.Count; teachIndex++)
                     {
-                        raspisanie[gr][i * step] = new Lesson() // Добавление предмета в расписание
+                        if (Check(i * step, teachers[teachIndex]))
                         {
-                            Subject = subjects[gr][0].Name,
-                            Teacher = teachers[0],
-                            Room = $"{rooms[0].Number} {rooms[0].Name}",
+                            raspisanie[gr][i * step] = new Lesson() // Добавление предмета в расписание
+                            {
+                                Subject = subjects[gr][0].Name,
+                                Teacher = teachers[teachIndex],
+                                Room = $"{rooms[0].Number} {rooms[0].Name}",
 
-                        };
-                    }
-                    else
-                    {
-                        int pos = (i * step) + 1;
-                        while (raspisanie[gr][pos].Subject != null && !Check(pos, subjects[gr][0].Name)) pos++; // Увеличение позиции на один
-                        raspisanie[gr][pos] = new Lesson() // Добавление предмета в расписание
+                            };
+                        }
+                        else
                         {
-                            Subject = subjects[gr][0].Name,
-                            Teacher = teachers[0],
-                            Room = $"{rooms[0].Number} {rooms[0].Name}",
+                            int pos = (i * step) + 1;
+                            while (raspisanie[gr][pos].Subject != null && !Check(pos, teachers[teachIndex])) pos++; // Увеличение позиции на один
+                            raspisanie[gr][pos] = new Lesson() // Добавление предмета в расписание
+                            {
+                                Subject = subjects[gr][0].Name,
+                                Teacher = teachers[teachIndex],
+                                Room = $"{rooms[0].Number} {rooms[0].Name}",
 
-                        };
+                            };
+                        }
                     }
                 }
             }
+            if (raspisanie.Count == 0) return;
             Generate();
         }
         static private void Generate() // Основаня генерация предметов
         {
             foreach(int gr in idGroups)
             {
+                if (subjects[gr].Count == 0) continue;
                 for (int sub = 1; sub < subjects[gr].Count; sub++)
                 {
                     int subjPar = subjects[gr][sub].TotalHours / 2; // количество пар одного предмета
                     int step = semestrPar / subjPar; // Шаг с которым необходимо расставить предмет
                     for (int i = 0; i < subjPar; i++) // FOR по количеству пар
                     {
-                        if (raspisanie[gr][i * step].Subject == null &&
-                            Check(i * step, subjects[gr][sub].Name)) // Проверка не занято ли значение
+                        for(int teachIndex = 0; teachIndex < teachers.Count; teachIndex++)
                         {
-                            raspisanie[gr][i * step] = new Lesson() // Добавление предмета в расписание
+                            if (raspisanie[gr][i * step].Subject == null &&
+                            Check(i * step, teachers[teachIndex])) // Проверка не занято ли значение
                             {
-                                Subject = subjects[gr][sub].Name,
-                                Teacher = teachers[0],
-                                Room = $"{rooms[0].Number} {rooms[0].Name}",
-                                
-                            };
-                        }
-                        else // Если пара занята другим предметом
-                        {
-                            int pos = (i * step) + 1; // Увеличение позиции на один
-                            int counter = 0; // Счетчик для WHILE
-                            while (raspisanie[gr][pos].Subject != null ||
-                                !Check(pos, subjects[gr][sub].Name)) // Пока позиция занята другими предметами 
-                            {
-                                if (counter > raspisanie[gr].Length) // Если счетчик превысит размер массива
+                                raspisanie[gr][i * step] = new Lesson() // Добавление предмета в расписание
                                 {
-                                    break; // Выход из WHILE
-                                }
-                                pos++; // Увеличение позиции на один
-                                if (pos >= raspisanie[gr].Length) pos = 0; // Если позиция больше размера массива, то возвращает в начало
-                                counter++;
+                                    Subject = subjects[gr][sub].Name,
+                                    Teacher = teachers[teachIndex],
+                                    Room = $"{rooms[0].Number} {rooms[0].Name}",
+
+                                };
                             }
-                            raspisanie[gr][pos] = new Lesson() // Добавление предмета в расписание
+                            else // Если пара занята другим предметом
                             {
-                                Subject = subjects[gr][sub].Name,
-                                Teacher = teachers[0],
-                                Room = $"{rooms[0].Number} {rooms[0].Name}",
-                                
-                            };
+                                int pos = (i * step) + 1; // Увеличение позиции на один
+                                int counter = 0; // Счетчик для WHILE
+                                while (raspisanie[gr][pos].Subject != null ||
+                                    !Check(pos, teachers[teachIndex])) // Пока позиция занята другими предметами 
+                                {
+                                    if (counter > raspisanie[gr].Length) // Если счетчик превысит размер массива
+                                    {
+                                        break; // Выход из WHILE
+                                    }
+                                    pos++; // Увеличение позиции на один
+                                    if (pos >= raspisanie[gr].Length) pos = 0; // Если позиция больше размера массива, то возвращает в начало
+                                    counter++;
+                                }
+                                raspisanie[gr][pos] = new Lesson() // Добавление предмета в расписание
+                                {
+                                    Subject = subjects[gr][sub].Name,
+                                    Teacher = teachers[teachIndex],
+                                    Room = $"{rooms[0].Number} {rooms[0].Name}",
+
+                                };
+                            }
                         }
                     }
                 }
@@ -114,11 +123,12 @@ namespace MySQLConnect.Model.Core
             CheckPari();
             PostGenerate();
         }
-        static private bool Check(int pos, string subject) // проверка // ЗАМЕНИТЬ НА ПРОВЕРКУ УЧИТЕЛЯ 
+        static private bool Check(int pos, string teacher) // проверка // ЗАМЕНИТЬ НА ПРОВЕРКУ УЧИТЕЛЯ 
         {
             foreach (int gr in idGroups)
             {
-                try { if (raspisanie[gr][pos].Subject == subject) return false; } 
+                if (subjects[gr].Count == 0) continue;
+                try { if (raspisanie[gr][pos].Teacher == teacher) return false; } 
                 catch { }
             }
             return true;
@@ -127,6 +137,7 @@ namespace MySQLConnect.Model.Core
         {
             foreach (int gr in idGroups) // Группы
             {
+                if (subjects[gr].Count == 0) continue;
                 do
                 {
                     for (int i = 0; i < bla[gr].Count; i++) // Остаточные предметы
@@ -136,18 +147,21 @@ namespace MySQLConnect.Model.Core
                         {
                             for (int pos = 0; pos < semestrPar; pos++) // Позиция в расписании
                             {
-                                if (bla[gr][i].parLeft > 0 && raspisanie[gr][pos].Subject == null && Check(pos, bla[gr][i].subject))
+                                for(int teachIndex = 0; teachIndex < teachers.Count; teachIndex++)
                                 {
-                                    raspisanie[gr][pos] = new Lesson()
+                                    if (bla[gr][i].parLeft > 0 && raspisanie[gr][pos].Subject == null && Check(pos, teachers[teachIndex]))
                                     {
-                                        Subject = bla[gr][i].subject,
-                                        Teacher = teachers[0],
-                                        Room = $"{rooms[0].Number} {rooms[0].Name}",
-                                        
-                                    };
-                                    TestStruct a = bla[gr][i];
-                                    a.parLeft--;
-                                    bla[gr][i] = a;
+                                        raspisanie[gr][pos] = new Lesson()
+                                        {
+                                            Subject = bla[gr][i].subject,
+                                            Teacher = teachers[teachIndex],
+                                            Room = $"{rooms[0].Number} {rooms[0].Name}",
+
+                                        };
+                                        TestStruct a = bla[gr][i];
+                                        a.parLeft--;
+                                        bla[gr][i] = a;
+                                    }
                                 }
                             }
                         }
@@ -162,6 +176,7 @@ namespace MySQLConnect.Model.Core
             finalRaspisanie.Clear();
             foreach (int gr in idGroups)
             {
+                if (subjects[gr].Count == 0) continue;
                 finalRaspisanie.Add(gr, new List<List<Lesson>>());
                 int day = 0;
                 finalRaspisanie[gr].Add(new List<Lesson>());
@@ -169,7 +184,7 @@ namespace MySQLConnect.Model.Core
                 {
                     raspisanie[gr][i].Day = day;
                     finalRaspisanie[gr][day].Add(raspisanie[gr][i]);
-                    if ((i + 1) % lessonInWeek == 0 && i + 1 != semestrPar)
+                    if ((i + 1) % parInWeek == 0 && i + 1 != semestrPar)
                     {
                         day++;
                         finalRaspisanie[gr].Add(new List<Lesson>());
@@ -216,6 +231,16 @@ namespace MySQLConnect.Model.Core
                             Text = $"{finalRaspisanie[idChoosedGroup][day + modify][para].Subject}",
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
                         });
+                        subject.Children.Add(new TextBlock()
+                        {
+                            Text = $"{finalRaspisanie[idChoosedGroup][day + modify][para].Teacher}",
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                        });
+                        subject.Children.Add(new TextBlock()
+                        {
+                            Text = $"{finalRaspisanie[idChoosedGroup][day + modify][para].Room}",
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                        });
                     }
                     catch(Exception ex) { Console.WriteLine(ex.Message); continue; }
                     tableTime.Children.Add(subject);
@@ -236,6 +261,16 @@ namespace MySQLConnect.Model.Core
                     subject.Children.Add(new TextBlock()
                     {
                         Text = $"{EditorHandler.thisWeek[day][para].Subject}",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                    });
+                    subject.Children.Add(new TextBlock()
+                    {
+                        Text = $"{EditorHandler.thisWeek[day][para].Teacher}",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                    });
+                    subject.Children.Add(new TextBlock()
+                    {
+                        Text = $"{EditorHandler.thisWeek[day][para].Room}",
                         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
                     });
                     tableTime.Children.Add(subject);
@@ -329,6 +364,7 @@ namespace MySQLConnect.Model.Core
         {
             foreach (int gr in idGroups)
             {
+                if (subjects[gr].Count == 0) continue;
                 bla.Add(gr, new List<TestStruct>());
                 for (int i = 0; i < semestrPar; i++)
                 {
@@ -352,6 +388,7 @@ namespace MySQLConnect.Model.Core
             }
             foreach (int gr in idGroups)
             {
+                if (subjects[gr].Count == 0) continue;
                 for (int i = 0; i < bla[gr].Count; i++)
                 {
                     TestStruct a = bla[gr][i];

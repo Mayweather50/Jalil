@@ -5,11 +5,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using static MySQLConnect.Model.Core.CSVReader;
 
 namespace MySQLConnect.ViewModel.Add
 {
-    public class AddGroupVM : INotifyPropertyChanged
+    public class LoadPlanVM :  INotifyPropertyChanged
     {
         public Window thisWindow;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -17,29 +16,24 @@ namespace MySQLConnect.ViewModel.Add
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-
-        public string GrpName { get; set; }
-        public ComboBoxItem selectSpec { get; set; }
-        public double Count { get; set; } = 5;
-
-        public List<ComboBoxItem> specList
-        {
-            get
-            {
-                List<ComboBoxItem> specData = new List<ComboBoxItem>();
-                foreach (string row in MySqlHandler.SpecDropdwn()) specData.Add(new ComboBoxItem() { Content = row });
-                return specData;
-            }
-        }
-        #region План
         private string path;
-        public string? FilePath
+        public string PathToFile
         {
             get { return path; }
             set
             {
                 path = value;
-                OnPropertyChanged("FilePath");
+                OnPropertyChanged("PathToFile");
+            }
+        }
+        public ComboBoxItem selectGroup { get; set; }
+        public List<ComboBoxItem> grpList // Выпадающий список групп
+        {
+            get
+            {
+                List<ComboBoxItem> grpData = new List<ComboBoxItem>();
+                foreach (string row in MySqlHandler.GroupsDropdwn()) grpData.Add(new ComboBoxItem() { Content = row });
+                return grpData;
             }
         }
         public ICommand ChooseFile
@@ -50,18 +44,17 @@ namespace MySQLConnect.ViewModel.Add
                 {
                     string[] responce = await Explorer.OpenExplorer(thisWindow, "csv");
                     if (responce == null) return;
-                    else foreach (string path in responce) FilePath = path;
+                    else foreach (string path in responce) PathToFile = path;
                 });
             }
         }
-        #endregion
-        public ICommand AddGroup
+        public ICommand Load
         {
             get
             {
                 return new ActionCommand(() =>
                 {
-                    if(!MySqlHandler.CheckDupl("groups", "name", GrpName)) MySqlHandler.WriteGroup(GrpName, selectSpec.Content.ToString(), (int)Count);
+                    CSVReader.Read(path, selectGroup.Content.ToString());
                     thisWindow.Close();
                 });
             }

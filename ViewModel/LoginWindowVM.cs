@@ -1,8 +1,7 @@
-﻿using Avalonia.Controls;
-using MySQLConnect.Core;
+﻿using MySQLConnect.Core;
 using MySQLConnect.Model.Core;
 using MySQLConnect.View;
-using MySQLConnect.View.Config;
+using MySQLConnect.View.Add;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;

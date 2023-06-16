@@ -1,8 +1,6 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using MySQLConnect.Model.Core;
 using MySQLConnect.ViewModel;
-using System;
 
 namespace MySQLConnect.View
 {

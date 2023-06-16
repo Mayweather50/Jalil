@@ -1,5 +1,7 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Data;
 using MySQLConnect.Core;
+using MySQLConnect.Model;
 using MySQLConnect.Model.Core;
 using MySQLConnect.View;
 using MySQLConnect.View.Add;
@@ -9,11 +11,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using static MySQLConnect.Model.Core.Tarification;
 
 namespace MySQLConnect.ViewModel
 {
     public class MainWindowVM : Window, INotifyPropertyChanged
     {
+        public DataGrid informationGrid;
         public event PropertyChangedEventHandler? PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
@@ -37,6 +41,7 @@ namespace MySQLConnect.ViewModel
                 return new RelayCommand<ushort>(index =>
                 {
                     dataGrid = MySqlHandler.TakeData(index);
+                    //informationGrid.Columns.Add(new DataGridTextColumn() { Header = $"Учитель", Binding = new Binding() { Path = ((TarificationModel)dataGrid[0]).Teacher } });
                 });
             }
         }
@@ -86,6 +91,28 @@ namespace MySQLConnect.ViewModel
                 });
             }
         }
+        public ICommand AddTarif
+        {
+            get
+            {
+                return new ActionCommand(() =>
+                {
+                    AddTarification tarif = new AddTarification();
+                    tarif.ShowDialog(Model.Config.rootWindow);
+                });
+            }
+        }
+        public ICommand AddPlan
+        {
+            get
+            {
+                return new ActionCommand(() =>
+                {
+                    LoadPlan loadPlan = new LoadPlan();
+                    loadPlan.ShowDialog(Model.Config.rootWindow);
+                });
+            }
+        }
         public ICommand EditTime
         {
             get
@@ -115,14 +142,14 @@ namespace MySQLConnect.ViewModel
             {
                 return new ActionCommand(async () =>
                 {
-                    testText = "";
-                    foreach (string path in await Explorer.OpenExplorer(Model.Config.rootWindow, "docx"))
-                    {
-                        foreach(string line in WordReader.Read(path))
-                        {
-                            testText += line + "\n";
-                        }
-                    }
+                    //testText = "";
+                    //string[] responce = await Explorer.OpenExplorer(Model.Config.rootWindow, "docx");
+                    //if (responce == null) return;
+                    //else
+                    //{
+                    //    foreach (string path in responce)
+                    //        foreach (string line in WordReader.Read(path)) testText += line + "\n";
+                    //}
                 });
             }
         }
@@ -166,7 +193,7 @@ namespace MySQLConnect.ViewModel
             {
                 return new RelayCommand<Grid>((grid) =>
                 {
-                    Tabletime.Start(grid);
+                    Tabletime.Start(grid, 0);
                 });
             }
         }

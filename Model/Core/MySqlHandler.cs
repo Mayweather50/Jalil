@@ -26,13 +26,55 @@ namespace MySQLConnect.Model.Core
             }
             CheckTables();
             GetAllGroupsId();
-            Tabletime.idChoosedGroup = Tabletime.idGroups[0];
+            try { Tabletime.idChoosedGroup = Tabletime.idGroups[0]; } catch (Exception ex) { Console.WriteLine(ex.Message); }
             return true;
+        }
+        private static void CheckTables()
+        {
+            MySqlCommand cmd = new MySqlCommand("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'tabletimedb';", conn);
+            int.TryParse(cmd.ExecuteScalar().ToString(), out int count);
+            if (count == 0) CreateTables();
+        }
+        private static void CreateTables()// Создание таблиц при начальном запуске приложения
+        {
+            string states = "create table if not exists `states`(id int primary key auto_increment,`name` varchar(15) not null); " +
+                "insert into `states`(`name`) values('Работает'), ('На больничном'), ('В командировке');";
+            string roomTypes = "create table if not exists `roomtypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
+                "insert into `roomtypes`(`name`) values('Лекционный'), ('Компьютерный'), ('Спортзал');";
+            string specialtyTypes = "create table if not exists `specialitytypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
+                "insert into `specialitytypes`(`name`) values('Профессиональный'), ('Специалиальный'), ('Коррекционый');";
+            string subjects = "create table if not exists `subjects`(id int primary key auto_increment,`name` varchar(100) not null unique,allhourbudjet smallint not null default 0," +
+                "allhourcorrection smallint not null default 0,allHournotbudjet smallint not null default 0,alltheoryhour smallint not null default 0,allconsultationhour smallint not null default 0);";
+            string teachers = "create table if not exists `teachers`(id int primary key auto_increment,fullname varchar(50) not null unique,state int not null default 1,stake float(2) not null," +
+                "burden smallint not null default 0,allhour smallint not null default 0,allhourcorrection smallint not null default 0,foreign key(state) references `states`(id) on delete cascade on update cascade);";
+            string specialities = "create table if not exists `specialities`(id int primary key auto_increment,`name` varchar(100) not null,`code` varchar(15) not null unique);";
+            string rooms = "create table if not exists `rooms`(id int primary key auto_increment,`name` varchar(50) not null,`number` smallint not null unique,`type` int not null," +
+                "foreign key(`type`) references `roomtypes`(id) on delete cascade on update cascade);";
+            string groups = "create table if not exists `groups`(id int primary key auto_increment,`name` varchar(10) not null unique,speciality int not null,count tinyint not null," +
+                "foreign key(speciality) references `specialities`(id) on delete cascade on update cascade);";
+            string teacherSubject = "create table if not exists `teachersubject`(id int primary key auto_increment,teacher_id int not null,subject_id int not null," +
+                "foreign key(teacher_id) references `teachers`(id) on delete cascade on update cascade,foreign key(subject_id) references `subjects`(id) on delete cascade on update cascade);";
+            string groupSubject = "create table if not exists `groupsubject`(id int primary key auto_increment,subject_id int not null,group_id int not null," +
+                "foreign key(subject_id) references `subjects`(id) on delete cascade on update cascade,foreign key(group_id) references `groups`(id) on delete cascade on update cascade);";
+            string tarification = "create table if not exists `tarification`(id int primary key auto_increment,groupsubject_id int not null unique,theory smallint not null," +
+                "division smallint not null default 0,consultation smallint not null,foreign key(groupsubject_id) references `groupsubject`(id) on delete cascade on update cascade);";
+            string plans = "create table if not exists `plans`(id int primary key auto_increment,groupsubject_id int not null,semestr tinyint not null,totalhour smallint not null," +
+                "independentwork smallint not null,consultation smallint not null,lesson smallint not null,practicalwork smallint not null,labwork smallint not null," +
+                "kursproject smallint not null,attestation smallint not null,foreign key(groupsubject_id) references `groupsubject`(id) on delete cascade on update cascade);";
+
+            List<string> commands = new List<string>() { states, roomTypes, specialtyTypes, subjects, teachers, specialities, rooms, groups, teacherSubject, groupSubject, tarification, plans };
+
+            MySqlCommand cmd;
+            for (int i = 0; i < commands.Count; i++)
+            {
+                cmd = new MySqlCommand(commands[i], conn);
+                cmd.ExecuteNonQuery();
+            }
         }
         public static void GetAllGroupsId() // Получение всех id'шников групп
         {
             MySqlCommand cmd = new MySqlCommand() { Connection = conn };
-            cmd.CommandText = "select `id` from _groups;";
+            cmd.CommandText = "select `id` from `groups`;";
             using (MySqlDataReader reader = cmd.ExecuteReader())
             {
                 if (reader.HasRows)
@@ -42,185 +84,163 @@ namespace MySQLConnect.Model.Core
                     }
             }
         }
-        private static void CheckTables()// Определяет, хватает ли таблиц(доработать, пусть стучится до каждой таблицы)
+        public static bool CheckTeachers()
         {
-            int tablesCount = 0;
-            string sql = $"show tables from {conn.Database} like '_%';";
-            MySqlCommand cmd = new MySqlCommand(sql, conn);
-            MySqlDataReader reader = cmd.ExecuteReader();
-            if (reader.HasRows) while (reader.Read()) tablesCount++;
-            reader.Close();
-            if (tablesCount < 12) CreateTables();
+            MySqlCommand cmd = new MySqlCommand("SELECT count(*) FROM teachers;", conn);
+            int.TryParse(cmd.ExecuteScalar().ToString(), out int count);
+            if (count == 0) return true;
+            else return false;
         }
-        private static void CreateTables()// Создание таблиц при их нехватке
-        {
-            string speciality = "CREATE TABLE IF NOT EXISTS `_Speciality` ( " +
-                                    "`id` int NOT NULL AUTO_INCREMENT ," +
-                                    "`code` VARCHAR(255) NOT NULL COMMENT 'Код специальности' ," +
-                                    "`name` VARCHAR(255) NOT NULL COMMENT 'Наименование специальности' ," +
-                                    "PRIMARY KEY (`id`)) ENGINE = InnoDB; ";
-
-            string groups = "CREATE TABLE IF NOT EXISTS `_groups` ( " +
-                            "`id` int NOT NULL AUTO_INCREMENT ," +
-                            "`name` VARCHAR(45) NOT NULL COMMENT 'Индекс группы' ," +
-                            "`speciality` int NOT NULL COMMENT 'Наименование специальности' ," +
-                            "`count` int NOT NULL COMMENT 'Кол-во студентов' ," +
-                            "`type` int NOT NULL COMMENT 'Тип группы' ," +
-                            "FOREIGN KEY (speciality)  REFERENCES _Speciality (id) on update cascade on delete restrict ," +
-                            "FOREIGN KEY (type)  REFERENCES _groupTypes (id) on update cascade on delete restrict," +
-                            "PRIMARY KEY (`id`))  ENGINE = InnoDB; ";
-
-            string teachers = "CREATE TABLE IF NOT EXISTS `_Teachers` ( " +
-                                    "`id` int NOT NULL AUTO_INCREMENT ," +
-                                    "`fullName` VARCHAR(255) NOT NULL COMMENT 'ФИО' ," +
-                                    "`state` int NOT NULL DEFAULT '1' COMMENT 'Состояние' ," +
-                                    "`timeJob` double NOT NULL DEFAULT '1' COMMENT 'Коэфициент ставки' ," +
-                                    "FOREIGN KEY (state)  REFERENCES _teacherstates (id) on update cascade on delete restrict," +
-                                    "PRIMARY KEY (`id`))  ENGINE = InnoDB; ";
-
-            string teachersRoom = "CREATE TABLE IF NOT EXISTS `_TeachersRoom` ( " +
-                                    "`teacher` int NOT NULL COMMENT 'Преподаватель' ," +
-                                    "`room` int NOT NULL COMMENT 'Аудитория' ," +
-                                    "FOREIGN KEY (room)  REFERENCES _Rooms (id) on update cascade on delete restrict," +
-                                    "FOREIGN KEY (teacher)  REFERENCES _Teachers (id) on update cascade on delete restrict) ENGINE = InnoDB; ";
-
-            string teachersSubject = "CREATE TABLE IF NOT EXISTS `_TeachersSubject` ( " +
-                                    "`subject` int NOT NULL COMMENT 'Дисциплина' ," +
-                                    "`teacher` int NOT NULL COMMENT 'Преподаватель' ," +
-                                    "FOREIGN KEY (subject)  REFERENCES _Subjects (`id`) on update cascade on delete restrict," +
-                                    "FOREIGN KEY (teacher)  REFERENCES _Teachers (id) on update cascade on delete restrict) ENGINE = InnoDB; ";
-
-            string subjects = "CREATE TABLE IF NOT EXISTS `_Subjects` ( " +
-                                    "`id` int not null auto_increment," +
-                                    "`index` VARCHAR(45) NOT NULL COMMENT 'Индекс дисциплины'," +
-                                    "`name` VARCHAR(255) NOT NULL COMMENT 'Наименование дисциплины' ," +
-                                    "`group` int NULL COMMENT 'Группа' ," +
-                                    "`roomType` int NULL COMMENT 'Тип аудитории' ," +
-                                    "FOREIGN KEY (group)  REFERENCES _groups (id) on update cascade on delete cascade," +
-                                    "FOREIGN KEY (roomType)  REFERENCES _roomTypes (id) on update cascade on delete restrict," +
-                                    "PRIMARY KEY (`id`))  ENGINE = InnoDB; ";
-
-            string roomTypes = "CREATE TABLE IF NOT EXISTS `_roomTypes` ( " +
-                                    "`id` int NOT NULL AUTO_INCREMENT ," +
-                                    "`type` varchar(255) NOT NULL COMMENT 'Наименование типа' ," +
-                                    "PRIMARY KEY (`id`))  ENGINE = InnoDB;" +
-                               "insert into _roomtypes(`type`) values" +
-                                       "('Лекционный')," +
-                                       "('Компьютерный')," +
-                                       "('Спортзал');";
-
-            string rooms = "CREATE TABLE IF NOT EXISTS `_Rooms` ( " +
-                                    "`id` int NOT NULL AUTO_INCREMENT ," +
-                                    "`name` varchar(255) NOT NULL DEFAULT 'Кабинет' COMMENT 'Наименование кабинета' ," +
-                                    "`number` int NOT NULL COMMENT 'Номер кабинета' ," +
-                                    "`type` int NOT NULL COMMENT 'Тип' ," +
-                                    "FOREIGN KEY(`type`)  REFERENCES _roomTypes(id) on update cascade on delete restrict," +
-                                    "PRIMARY KEY (`id`))  ENGINE = InnoDB; ";
-
-            string plans = $"CREATE TABLE IF NOT EXISTS `_plans` (" +
-                                        "`index` varchar(255) not null, " +
-                                        "`group` varchar(45) not null, " +
-                                        "`totalHour` varchar(255) not null, " +
-                                        "`independentWork` varchar(255) not null, " +
-                                        "`consultations` varchar(255) not null, " +
-                                        "`lessons` varchar(255) not null, " +
-                                        "`practicalWork` varchar(255) not null, " +
-                                        "`laboratoryWork` varchar(255) not null," +
-                                        "`kursPojectDo` varchar(255) null, " +
-                                        "`attestation` varchar(255) not null, " +
-                                        "PRIMARY KEY(`index`))ENGINE = InnoDB;";
-
-            string groupTypes = "CREATE TABLE IF NOT EXISTS `_groupTypes` (" +
-                                        "`id` int not null AUTO_INCREMENT, " +
-                                        "`type` varchar(45) not null, " +
-                                        "PRIMARY KEY(`id`))ENGINE = InnoDB;" +
-                                 "insert into _grouptypes(`type`) values" +
-                                        "('Специалисты среднего звена')," +
-                                        "('Квалифицированные рабочие служащие')," +
-                                        "('Лица с ограниченными возможностями здоровья');";
-
-            string teacherStates = "CREATE TABLE IF NOT EXISTS `_teacherStates` (" +
-                                            "`id` int NOT NULL AUTO_INCREMENT ," +
-                                            "`name` varchar(255) NOT NULL COMMENT 'Наименование Состояния' ," +
-                                            "PRIMARY KEY (`id`))  ENGINE = InnoDB;" +
-                                   "insert into _teacherStates(`name`) values" +
-                                        "('Работает')," +
-                                        "('На больничном')," +
-                                        "('В командировке')," +
-                                        "('В отпуске');";
-
-            List<string> commands = new List<string>() { teacherStates, speciality, teachers, roomTypes, groupTypes, groups, subjects, rooms, teachersSubject, teachersRoom, plans };
-
-            MySqlCommand cmd;
-            for (int i = 0; i < commands.Count; i++)
-            {
-                cmd = new MySqlCommand(commands[i], conn);
-                cmd.ExecuteNonQuery();
-            }
-        }
-        public static void WritePlan(string group, List<CSVReader.Lesson> lessons) // запись дисциплин в БД
+        public static void WriteSpeciality()
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = conn;
-            int grpId = GetGroupId(group);
-            if (grpId == null)
+            foreach (Tarification.Speciality spec in Tarification.allSpecialities)
             {
-                Console.WriteLine("Ошибка с получением ID группы!");
-                return;
+                string command = $"insert ignore into `specialities`(`name`, `code`) values ('{spec.Name}', '{spec.Code}');";
+                cmd.CommandText = command;
+                try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
             }
-            cmd.CommandText = $"DELETE from _plans where _plans.group = '{grpId}';"; // Очистка старого учебного плана этой группы            
-            try { cmd.ExecuteNonQuery(); }
-            catch (MySqlException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return;
-            }
-            foreach (CSVReader.Lesson lesson in lessons)
-            {
-                string insert = $"INSERT INTO `_plans` (`index`, `group`, `totalHour`, `independentWork`, `consultations`, `lessons`, " +
-                    $"`practicalWork`, `laboratoryWork`,`kursPojectDo`, `attestation`)" +
-                $"VALUES ('{lesson.index}'," +
-                $"{grpId}," +
-                $"'{lesson.semestr.allHours}', '{lesson.semestr.samostoyatelnie}', '{lesson.semestr.konsultacii}'," +
-                $"'{lesson.semestr.lekcii}', '{lesson.semestr.prackticheskie}', '{lesson.semestr.laboratornie}', '{lesson.semestr.kursProjectDo}'," +
-                $"'{lesson.semestr.promezhAttestation}');";
-                cmd.CommandText = insert;
-                try { cmd.ExecuteNonQuery(); }
-                catch (MySqlException ex)
-                {
-                    Console.WriteLine($"WritePlan {ex.Message}");
-                    continue;
-                }
-                WriteSubjects(lesson.index, lesson.name);
-            }
-            Console.WriteLine("План успешно загружен!");
         }
-        private static void WriteSubjects(string index, string name)
+        public static void WriteSubjectsTeachersGroups()
         {
-            string insert = $"insert ignore into _subjects(`index`, `name`) values ('{index}', '{name}');";
-            MySqlCommand cmd = new MySqlCommand(insert, conn);
-            try { cmd.ExecuteNonQuery(); }
-            catch (MySqlException ex)
+            MySqlCommand cmd = new MySqlCommand();
+            cmd.Connection = conn;
+            foreach (Tarification.Teacher teacher in Tarification.teachers)
             {
-                Console.WriteLine($"WriteSubjects {ex.Message}");
-                return;
+                string command = $"INSERT ignore INTO `teachers` (`fullname`, `stake`, `burden`, `allhour`, `allhourcorrection`) " +
+                    $"VALUES ('{teacher.Name}', {teacher.Stavka.ToString().Replace(",", ".")}, {teacher.Burden}, {teacher.AllHour}, {teacher.AllHourCorrection});";
+                cmd.CommandText = command;
+                try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                foreach (Tarification.Subject subject in teacher.Subjects)
+                {
+                    command = $"INSERT ignore INTO `subjects` (`name`, `allhourbudjet`, `allhourcorrection`, `allHournotbudjet`, `alltheoryhour`, `allconsultationhour`) " +
+                    $"VALUES ('{subject.Name}', {subject.AllHour}, {subject.AllHourCorrection}, 0, {subject.TheoryHour}, {subject.ConsultationHour});";
+                    cmd.CommandText = command;
+                    try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+
+                    cmd.CommandText = $"select `id` from `subjects` where `name` = '{subject.Name}';";
+                    int subjectId = Convert.ToInt32(cmd.ExecuteScalar());
+                    cmd.CommandText = $"select `id` from `teachers` where `fullname` = '{teacher.Name}';";
+                    int teacherId = Convert.ToInt32(cmd.ExecuteScalar());
+                    cmd.CommandText = $"select exists(select `id` from `teachersubject` where `subject_id` = {subjectId} and `teacher_id` = {teacherId});";
+                    int recordExists = Convert.ToInt32(cmd.ExecuteScalar());
+                    if(recordExists == 0)
+                    {
+                        cmd.CommandText = $"insert ignore into `teachersubject`(`teacher_id`, `subject_id`) values({teacherId}, {subjectId});";
+                        try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                    }
+                    foreach (Tarification.Group group in subject.Groups)
+                    {
+                        string newCommand = $"select `id` from `specialities` where concat(`code`, ' ', `name`) = '{group.Speciality}';";
+                        cmd.CommandText = newCommand;
+                        int specId = Convert.ToInt32(cmd.ExecuteScalar());
+                        command = $"INSERT ignore INTO `groups` (`name`, `speciality`, `count`) " +
+                            $"VALUES ('{group.Name}', {specId}, {group.Count});";
+                        cmd.CommandText = command;
+                        try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+
+                        command = $"select `id` from `subjects` where `name` = '{subject.Name}';";
+                        cmd.CommandText = command;
+                        subjectId = Convert.ToInt32(cmd.ExecuteScalar());
+                        command = $"select `id` from `groups` where `name` = '{group.Name}';";
+                        cmd.CommandText = command;
+                        int groupId = Convert.ToInt32(cmd.ExecuteScalar());
+
+                        command = $"select exists(select `id` from `groupsubject` where `subject_id` = {subjectId} and `group_id` = {groupId});";
+                        cmd.CommandText = command;
+                        recordExists = Convert.ToInt32(cmd.ExecuteScalar());
+                        if (recordExists == 0)
+                        {
+                            command = $"insert ignore into `groupsubject`(`subject_id`, `group_id`) values({subjectId}, {groupId});";
+                            cmd.CommandText = command;
+                            try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                        }
+                    }
+                }
+            }
+            GetAllGroupsId();
+            try { Tabletime.idChoosedGroup = Tabletime.idGroups[0]; } catch (Exception ex) { Console.WriteLine(ex.Message); }
+            LoadTarification();
+        }
+        private static void LoadTarification()
+        {
+            MySqlCommand cmd = new MySqlCommand();
+            cmd.Connection = conn;
+            foreach (Tarification.Teacher teacher in Tarification.teachers)
+            {
+                foreach (Tarification.Subject subject in teacher.Subjects)
+                {
+                    foreach (Tarification.Group group in subject.Groups)
+                    {
+                        if (group.Hours[0] == 0 && group.Hours[1] == 0 && group.Hours[2] == 0) continue;
+                        string command = $"select `id` from `groups` where `name` = '{group.Name}';";
+                        cmd.CommandText = command;
+                        int groupId = Convert.ToInt32(cmd.ExecuteScalar());
+                        command = $"select `id` from `subjects` where `name` = '{subject.Name}';";
+                        cmd.CommandText = command;
+                        int subjectId = Convert.ToInt32(cmd.ExecuteScalar());
+                        command = $"select `id` from `groupsubject` where `subject_id` = {subjectId} and `group_id` = {groupId};";
+                        cmd.CommandText = command;
+                        int id = Convert.ToInt32(cmd.ExecuteScalar());
+
+                        command = $"insert ignore into `tarification`(`groupsubject_id`, `theory`, `division`, `consultation`)" +
+                            $"values ({id}, {group.Hours[0]}, {group.Hours[1]}, {group.Hours[2]});";
+                        cmd.CommandText = command;
+                        try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                    }
+                }
+            }
+        }
+        public static void WritePlan(string group) // запись дисциплин в БД
+        {
+            MySqlCommand cmd = new MySqlCommand();
+            cmd.Connection = conn;
+            int groupId = GetGroupId(group);
+            foreach(int semestr in CSVReader.plan.Keys)
+            {
+                foreach(CSVReader.Subject subject in CSVReader.plan[semestr])
+                {
+                    int subjectId = 0;
+                    cmd.CommandText = $"SELECT `id` from `subjects` where `name` = '{subject.Name}';";
+                    var a = cmd.ExecuteScalar();
+                    if(a != null) subjectId = Convert.ToInt32(a);
+                    else
+                    {
+                        cmd.CommandText = $"INSERT ignore INTO `subjects` (`name`, `allhourbudjet`, `allhourcorrection`, `allHournotbudjet`, `alltheoryhour`, `allconsultationhour`) " +
+                            $"VALUES ('{subject.Name}', default, default, default, default, default);";
+                        try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                        cmd.CommandText = $"SELECT `id` from `subjects` where `name` = '{subject.Name}';";
+                        subjectId = Convert.ToInt32(cmd.ExecuteScalar());
+                        cmd.CommandText = $"insert ignore into `groupsubject`(`subject_id`, `group_id`) values({subjectId}, {groupId});";
+                        try { cmd.ExecuteNonQuery(); }catch(MySqlException ex) { Console.WriteLine(ex.Message); }
+                    }
+                    cmd.CommandText = $"select `id` from `groupsubject` where `subject_id` = {subjectId} and `group_id` = {groupId};";
+                    int groupSubjectId = Convert.ToInt32(cmd.ExecuteScalar());
+
+                    cmd.CommandText = $"insert ignore into `plans`(`groupsubject_id`, `semestr`, `totalhour`, `independentwork`, `consultation`, `lesson`, `practicalwork`, `labwork`, `kursproject`, `attestation`) " +
+                        $"values({groupSubjectId}, {semestr}, {subject.TotalHour}, {subject.IndependentHour}, {subject.ConsultationHour}, {subject.Lesson}," +
+                        $"{subject.PracWork}, {subject.LabWork}, {subject.Kurs}, {subject.Attestation});";
+                    try { cmd.ExecuteNonQuery(); } catch (MySqlException ex) { Console.WriteLine(ex.Message); }
+                }
             }
         }
         public static List<object> TakeData(ushort index)
         {
-            string selTeachers = "SELECT `fullName`," +
-                "(select `name` from _teacherstates where _teacherstates.id = _teachers.state), " +
-                "`timeJob`, " +
-                "(select `number` from _Rooms where _Rooms.id = (select `room` from _TeachersRoom where _TeachersRoom.teacher = _teachers.id)), " +
-                "(select `subject` from _TeachersSubject where _TeachersSubject.teacher = _teachers.id) from _teachers;";
-            string selRooms = "SELECT `name`, `number`, (select `type` from _roomtypes where _roomtypes.id = _Rooms.`type`) from _Rooms;";
-            string selSubjects = "SELECT `index`, `name`, (select `type` from _roomtypes where _roomtypes.id = _Subjects.`roomtype`) from _Subjects;";
-            string selGroups = "SELECT `name`, (select `name` from _speciality where _speciality.`id` = _groups.`speciality`), `count`," +
-                "(select `type` from _grouptypes where _grouptypes.`id` = _groups.`type`) from _groups;";
+            string teachers = "select `fullname` as 'ФИО', (select `name` from `states` where `id` = `state`) as 'Состояние', `stake` as 'Ставка', `burden` as 'Нагрузка', " +
+                "`allhour` as 'Всего часов', `allhourcorrection` as 'Всего часов коррекции' from `teachers`;";
+            string plans = "select (select (select `name` from `groups` where `id` = `group_id`) from `groupsubject` where `id` = `groupsubject_id`) as 'Группа'," +
+                "(select (select `name` from `subjects` where `id` = `subject_id`) from `groupsubject` where `id` = `groupsubject_id`) as 'Предмет',`semestr` as 'Семестр', " +
+                "`totalhour` as 'Всего часов', `independentwork` as 'Самостоятельная работа', `consultation` as 'Консультация', `lesson` as 'Лекции', `practicalwork` as 'Практическая работа'," +
+                "`labwork` as 'Лабораторная работа', `kursproject` as 'Курсовой проект', `attestation` as 'Аттестация' from `plans`;";
+            string tarification = "select (select (select (select `fullname` from `teachers` where `id` = `teacher_id`) from `teachersubject` where `subject_id` = `groupsubject`.`subject_id`) " +
+                "from `groupsubject` where `id` = `groupsubject_id`) as 'Преподаватель',(select (select `name` from `subjects` where `id` = `subject_id`) " +
+                "from `groupsubject` where `id` = `groupsubject_id`) as 'Предмет',(select (select `name` from `groups` where `id` = `group_id`) from `groupsubject` where `id` = `groupsubject_id`) as 'Группа'," +
+                "`theory` as 'Теория', `division` as 'Деление по группам', `consultation` as 'Консультации' from `tarification`;";
+            string groups = "select `name` as 'Наименование',(select `name` from `specialities` where `id` = `speciality`) as 'Специальность',`count` as 'Количество человек' from `groups`;";
 
-            List<string> commands = new List<string>() { selTeachers, selRooms, selSubjects, selGroups };
+            List<string> commands = new List<string>() { teachers, plans, tarification, groups };
             List<object> data = new List<object>();
-
             MySqlCommand cmd = new MySqlCommand(commands[index], conn);
             MySqlDataReader reader = cmd.ExecuteReader();
             try { if (!reader.HasRows) throw new Exception("READER не имеет строк!"); }
@@ -241,20 +261,20 @@ namespace MySQLConnect.Model.Core
                             tm.FillValue(reader);
                             data.Add(tm);
                             break;
+                        case 1:
+                            PlanModel sm = new PlanModel();
+                            sm.FillValue(reader);
+                            data.Add(sm);
+                            break;
+                        case 2:
+                            TarificationModel rm = new TarificationModel();
+                            rm.FillValue(reader);
+                            data.Add(rm);
+                            break;
                         case 3:
                             GroupsModel gm = new GroupsModel();
                             gm.FillValue(reader);
                             data.Add(gm);
-                            break;
-                        case 2:
-                            SubjectModel sm = new SubjectModel();
-                            sm.FillValue(reader);
-                            data.Add(sm);
-                            break;
-                        default:
-                            RoomModel rm = new RoomModel();
-                            rm.FillValue(reader);
-                            data.Add(rm);
                             break;
                     }
                 }
@@ -267,7 +287,7 @@ namespace MySQLConnect.Model.Core
         public static List<string> SpecDropdwn() // вывод в DropDown специальностей групп
         {
             List<string> data = new List<string>();
-            string request = "SELECT `code`, `name` FROM _speciality;";
+            string request = "SELECT `code`, `name` FROM `specialities`;";
             MySqlCommand cmd = new MySqlCommand(request, conn);
             MySqlDataReader reader = cmd.ExecuteReader();
             if (reader.HasRows) while (reader.Read()) data.Add($"{reader[0]} {reader[1]}");
@@ -277,7 +297,7 @@ namespace MySQLConnect.Model.Core
         public static List<string> TypeDropdwn(string table) // вывод в DropDown типы групп
         {
             List<string> data = new List<string>();
-            string request = $"SELECT `type` FROM {table};";
+            string request = $"SELECT `name` FROM `{table}`;";
             MySqlCommand cmd = new MySqlCommand(request, conn);
             MySqlDataReader reader = cmd.ExecuteReader();
             if (reader.HasRows) while (reader.Read()) data.Add(reader[0].ToString());
@@ -287,7 +307,7 @@ namespace MySQLConnect.Model.Core
         public static List<string> GroupsDropdwn() // вывод в DropDown группы
         {
             List<string> data = new List<string>();
-            string request = "SELECT `name` FROM _groups;";
+            string request = "SELECT `name` FROM `groups`;";
             MySqlCommand cmd = new MySqlCommand(request, conn);
             MySqlDataReader reader = cmd.ExecuteReader();
             if (reader.HasRows) while (reader.Read()) data.Add(reader[0].ToString());
@@ -297,71 +317,51 @@ namespace MySQLConnect.Model.Core
         public static List<string> TchrStateDropdwn()
         {
             List<string> data = new List<string>();
-            string request = "SELECT `name` FROM _teacherstates;";
+            string request = "SELECT `name` FROM `states`;";
             MySqlCommand cmd = new MySqlCommand(request, conn);
             MySqlDataReader reader = cmd.ExecuteReader();
-            if (reader.HasRows) while (reader.Read())
-                {
-                    Console.WriteLine(reader.GetString(0));
-                    data.Add(reader.GetString(0));
-                }
-            reader.Close();
-            return data;
-        }
-        public static List<string> GroupDropdwn()
-        {
-            List<string> data = new List<string>();
-            string request = "SELECT `name` FROM _groups;";
-            MySqlCommand cmd = new MySqlCommand(request, conn);
-            MySqlDataReader reader = cmd.ExecuteReader();
-            if (reader.HasRows) while (reader.Read())
-                {
-                    Console.WriteLine(reader.GetString(0));
-                    data.Add(reader.GetString(0));
-                }
+            if (reader.HasRows) while (reader.Read()) data.Add(reader.GetString(0));
             reader.Close();
             return data;
         }
         public static List<string> SubjDropdwn()
         {
             List<string> data = new List<string>();
-            string request = "SELECT `index`, `name` FROM _subjects;";
+            string request = "SELECT `name` FROM `subjects`;";
             MySqlCommand cmd = new MySqlCommand(request, conn);
             MySqlDataReader reader = cmd.ExecuteReader();
-            if (reader.HasRows) while (reader.Read()) data.Add($"{reader.GetString(0)} {reader.GetString(1)}"); //{reader.GetString(2)} - группа
+            if (reader.HasRows) while (reader.Read()) data.Add($"{reader.GetString(0)}");
             reader.Close();
             return data;
         }
         #endregion
         public static bool CheckDupl(string table, string column, object value)
         {
-            string chck = $"select exists(select * from {table} where `{column}` = '{value}');";
+            string chck = $"select exists(select * from `{table}` where `{column}` = '{value}');";
             MySqlCommand cmd = new MySqlCommand(chck, conn);
             string a = cmd.ExecuteScalar().ToString();
             if (int.TryParse(a, out int arr) && arr == 0) return false;
             else return true;
         }
-        public static void WriteGroup(string group, string spec, int count, string type) // Запись группы в БД
+        public static void WriteGroup(string group, string spec, int count) // Запись группы в БД
         {
-            MySqlCommand cmd = new MySqlCommand() { Connection = conn};
-            cmd.CommandText = $"insert into _groups(`name`, `speciality`, `count`, `type`) values" +
-                    $"('{group}', (select `id` from _speciality where concat(`code`, ' ', `name`) = '{spec}')," +
-                    $"{count}, (select `id` from _grouptypes where `type` = '{type}'));";
+            MySqlCommand cmd = new MySqlCommand() { Connection = conn };
+            cmd.CommandText = $"insert into `groups`(`name`, `speciality`, `count`) values" +
+                    $"('{group}', (select `id` from `specialities` where concat(`code`, ' ', `name`) = '{spec}'), {count});";
             try { cmd.ExecuteNonQuery(); }
             catch (MySqlException ex)
             {
                 Console.WriteLine(ex.Message);
                 return;
             }
-            Console.WriteLine("Группа успешно записана!");
         }
         public static void WriteRoom(string name, ushort number, string type)
         {
             MySqlCommand cmd = new MySqlCommand() { Connection = conn };
-            string insert = $"insert into _rooms(`name`, `number`, `type`) values" +
+            string insert = $"insert into rooms(`name`, `number`, `type`) values" +
                     $"('{name}'," +
                     $"{number}, " +
-                    $"(select `id` from _roomtypes where `type` = '{type}'));";
+                    $"(select `id` from `roomtypes` where `name` = '{type}'));";
             cmd.CommandText = insert;
             try { cmd.ExecuteNonQuery(); }
             catch (MySqlException ex)
@@ -369,75 +369,70 @@ namespace MySQLConnect.Model.Core
                 Console.WriteLine(ex.Message);
                 return;
             }
-            Console.WriteLine("Аудитория успешно добавлена!");
         }
         public static void WriteSpec(string code, string name)
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = conn;
-            cmd.CommandText = $"insert into _speciality(`code`, `name`) values ('{code}', '{name}');";
+            cmd.CommandText = $"insert ignore into `specialities` (`name`, `code`) values ('{name}', '{code}');";
             try { cmd.ExecuteNonQuery(); }
             catch (MySqlException ex)
             {
                 Console.WriteLine(ex.Message);
                 return;
             }
-            Console.WriteLine("Специальность успешно добавлена!");
         }
-        public static void WriteTeacher(string name, string type, string state, double timeJob, string group, string subject)
+        public static void WriteTeacher(string name, string state, double timeJob)
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = conn;
-            cmd.CommandText = $"insert into _teachers(`fullName`, `type`, `state`, `timeJob`, `group`) values (" +
+            cmd.CommandText = $"insert into `teachers`(`fullName`, `state`, `stake`, `burden`, `allhour`, `allhourcorrection`) values (" +
                 $"'{name}'," +
-                $"(select `id` from _teachertypes where `type` = '{type}')," +
-                $"(select `id` from _teacherstates where _teacherstates.name = '{state}')," +
-                $"{timeJob}," +
-                $"(select `id` from _groups where `name` = '{group}'));" +
-                $"insert into _teacherssubject(`subject`, `teacher`) values (" +
-                $"(select `index` from _subjects where concat(`index`, ' ', `name`) = '{subject}')," +
-                $"(select `id` from _teachers where `fullName` = '{name}'));";
+                $"(select `id` from `states` where `name` = '{state}')," +
+                $"{timeJob}, default, default, default);";
             try { cmd.ExecuteNonQuery(); }
             catch (MySqlException ex)
             {
                 Console.WriteLine(ex.Message);
                 return;
             }
-            Console.WriteLine("Преподаватель успешно добавлен!");
         }
-        public static void GetData4TableTime()
+        //-------------------------------------
+        public static void GetData4TableTime(int semestr)
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = conn;
+            Tabletime.subjects.Clear();
+            Tabletime.teachers.Clear();
+            Tabletime.rooms.Clear();
             foreach (int gr in Tabletime.idGroups)
             {
                 Tabletime.subjects.Add(gr, new List<Subject>());
-                cmd.CommandText = "select `index`, (select `name` from _subjects where _subjects.`index` = _plans.`index`), `totalHour`," +
-                "(select `type` from _roomtypes where _roomtypes.`id` = (select `roomType` from _subjects where _subjects.`index` = _plans.`index`))" +
-                $"from _plans where `group` = {gr} order by `totalHour` desc;";
+                cmd.CommandText = "select(select (select `name` from `subjects` where `id` = `subject_id`) from `groupsubject` where `id` = `groupsubject_id`)," +
+                    $"`totalhour` from `plans` where (select `group_id` from `groupsubject` where `id` = `groupsubject_id`) = {gr} and `semestr` = {semestr} order by `totalhour` desc;";
                 using (MySqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (reader.HasRows)
                         while (reader.Read())
                         {
-                            if (reader.GetInt32(2) <= 1) continue;
+                            if (reader.GetInt32(1) <= 1) continue;
                             Subject sub = new Subject()
                             {
-                                Name = reader.GetString(1),
-                                TotalHours = reader.GetInt32(2)
+                                Name = reader.GetString(0),
+                                TotalHours = reader.GetInt32(1)
                             };
                             Tabletime.subjects[gr].Add(sub);
                         }
                 }
             }
-            cmd.CommandText = "select `fullName` from _teachers;";
+            cmd.CommandText = "select `fullName` from `teachers`;";
             using (MySqlDataReader reader = cmd.ExecuteReader())
             {
                 if (reader.HasRows)
                     while (reader.Read())
                         Tabletime.teachers.Add(reader.GetString(0));
             }
-            cmd.CommandText = "SELECT `number`, `name`, (select `type` from _roomtypes where _roomtypes.`id` = _rooms.`type`) FROM _rooms;";
+            cmd.CommandText = "SELECT `number`, `name`, (select `name` from `roomtypes` where `id` = `type`) FROM `rooms`;";
             using (MySqlDataReader reader = cmd.ExecuteReader())
             {
                 if (reader.HasRows)
@@ -454,7 +449,7 @@ namespace MySQLConnect.Model.Core
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = conn;
-            cmd.CommandText = $"(SELECT `id` from _groups where `name` = '{group}')";
+            cmd.CommandText = $"(SELECT `id` from `groups` where `name` = '{group}')";
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
     }

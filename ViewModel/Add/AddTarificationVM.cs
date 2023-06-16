@@ -1,15 +1,14 @@
 ﻿using Avalonia.Controls;
 using MySQLConnect.Core;
 using MySQLConnect.Model.Core;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using static MySQLConnect.Model.Core.CSVReader;
 
 namespace MySQLConnect.ViewModel.Add
 {
-    public class AddGroupVM : INotifyPropertyChanged
+    public class AddTarificationVM : INotifyPropertyChanged
     {
         public Window thisWindow;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -18,28 +17,24 @@ namespace MySQLConnect.ViewModel.Add
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public string GrpName { get; set; }
-        public ComboBoxItem selectSpec { get; set; }
-        public double Count { get; set; } = 5;
-
-        public List<ComboBoxItem> specList
+        private string _path;
+        public string FilePath
         {
-            get
-            {
-                List<ComboBoxItem> specData = new List<ComboBoxItem>();
-                foreach (string row in MySqlHandler.SpecDropdwn()) specData.Add(new ComboBoxItem() { Content = row });
-                return specData;
-            }
-        }
-        #region План
-        private string path;
-        public string? FilePath
-        {
-            get { return path; }
+            get { return _path; }
             set
             {
-                path = value;
+                _path = value;
                 OnPropertyChanged("FilePath");
+            }
+        }
+        private bool _budjet;
+        public bool Budjet
+        {
+            get { return _budjet; }
+            set
+            {
+                _budjet = value;
+                OnPropertyChanged("Budjet");
             }
         }
         public ICommand ChooseFile
@@ -50,18 +45,17 @@ namespace MySQLConnect.ViewModel.Add
                 {
                     string[] responce = await Explorer.OpenExplorer(thisWindow, "csv");
                     if (responce == null) return;
-                    else foreach (string path in responce) FilePath = path;
+                    else foreach(string path in responce) FilePath = path;
                 });
             }
         }
-        #endregion
-        public ICommand AddGroup
+        public ICommand LoadTarification
         {
             get
             {
                 return new ActionCommand(() =>
                 {
-                    if(!MySqlHandler.CheckDupl("groups", "name", GrpName)) MySqlHandler.WriteGroup(GrpName, selectSpec.Content.ToString(), (int)Count);
+                    Tarification.Read(_path, _budjet);
                     thisWindow.Close();
                 });
             }

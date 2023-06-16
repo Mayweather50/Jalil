@@ -24,7 +24,7 @@ namespace MySQLConnect.ViewModel.Add
             get
             {
                 List<ComboBoxItem> typeData = new List<ComboBoxItem>();
-                foreach (string row in MySqlHandler.TypeDropdwn("_roomtypes")) typeData.Add(new ComboBoxItem() { Content = row });
+                foreach (string row in MySqlHandler.TypeDropdwn("roomtypes")) typeData.Add(new ComboBoxItem() { Content = row });
                 return typeData;
             }
         }
@@ -34,7 +34,7 @@ namespace MySQLConnect.ViewModel.Add
             {
                 return new ActionCommand(() =>
                 {
-                    if(!MySqlHandler.CheckDupl("_rooms", "number", Number)) MySqlHandler.WriteRoom(Name, Number, (string)selectItem.Content);
+                    if(!MySqlHandler.CheckDupl("rooms", "number", Number)) MySqlHandler.WriteRoom(Name, Number, (string)selectItem.Content);
                     thisWindow.Close();
                 });
             }

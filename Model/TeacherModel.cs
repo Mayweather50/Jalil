@@ -2,19 +2,21 @@
 {
     public class TeacherModel
     {
-        public string Name { get; set; }
+        public string Fullname { get; set; }
         public string State { get; set; }
-        public float Timejob { get; set; }
-        public string Roomnumber { get; set; }
-        public string Subject { get; set; }
+        public float Stake { get; set; }
+        public ushort Burden { get; set; }
+        public ushort AllHour { get; set; }
+        public ushort AllHourCorrection { get; set; }
 
         public void FillValue(MySql.Data.MySqlClient.MySqlDataReader reader)
         {
-            Name = reader.GetString(0);
+            Fullname = reader.GetString(0);
             State = reader.GetString(1);
-            Timejob = reader.GetFloat(2);
-            //Roomnumber = reader.GetString(3);
-            //Subject = reader.GetString(4);
+            Stake = reader.GetFloat(2);
+            Burden = reader.GetUInt16(3);
+            AllHour = reader.GetUInt16(4);
+            AllHourCorrection = reader.GetUInt16(5);
         }
     }
 }

@@ -25,7 +25,7 @@ namespace MySQLConnect.ViewModel.Add
             {
                 return new ActionCommand(() =>
                 {
-                    if (!MySqlHandler.CheckDupl("_speciality", "code", Code)) MySqlHandler.WriteSpec(Code, Name);
+                    if (!MySqlHandler.CheckDupl("specialities", "code", Code)) MySqlHandler.WriteSpec(Code, Name);
                 });
             }
         }
