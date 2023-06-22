@@ -41,8 +41,8 @@ namespace MySQLConnect.Model.Core
                 "insert into `states`(`name`) values('Работает'), ('На больничном'), ('В командировке');";
             string roomTypes = "create table if not exists `roomtypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
                 "insert into `roomtypes`(`name`) values('Лекционный'), ('Компьютерный'), ('Спортзал');";
-            string specialtyTypes = "create table if not exists `specialitytypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
-                "insert into `specialitytypes`(`name`) values('Профессиональный'), ('Специалиальный'), ('Коррекционый');";
+            //string specialtyTypes = "create table if not exists `specialitytypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
+            //    "insert into `specialitytypes`(`name`) values('Профессиональный'), ('Специалиальный'), ('Коррекционый');";
             string subjects = "create table if not exists `subjects`(id int primary key auto_increment,`name` varchar(100) not null unique,allhourbudjet smallint not null default 0," +
                 "allhourcorrection smallint not null default 0,allHournotbudjet smallint not null default 0,alltheoryhour smallint not null default 0,allconsultationhour smallint not null default 0);";
             string teachers = "create table if not exists `teachers`(id int primary key auto_increment,fullname varchar(50) not null unique,state int not null default 1,stake float(2) not null," +
@@ -62,7 +62,7 @@ namespace MySQLConnect.Model.Core
                 "independentwork smallint not null,consultation smallint not null,lesson smallint not null,practicalwork smallint not null,labwork smallint not null," +
                 "kursproject smallint not null,attestation smallint not null,foreign key(groupsubject_id) references `groupsubject`(id) on delete cascade on update cascade);";
 
-            List<string> commands = new List<string>() { states, roomTypes, specialtyTypes, subjects, teachers, specialities, rooms, groups, teacherSubject, groupSubject, tarification, plans };
+            List<string> commands = new List<string>() { states, roomTypes, subjects, teachers, specialities, rooms, groups, teacherSubject, groupSubject, tarification, plans };
 
             MySqlCommand cmd;
             for (int i = 0; i < commands.Count; i++)

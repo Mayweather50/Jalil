@@ -31,6 +31,7 @@
 		<TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="Редактирование времени"
 				   FontSize="28" HorizontalAlignment="Left" FontWeight="Bold"
 				   Margin="50 0 0 0"/>
+		<Rectangle Grid.Row="0" Grid.ColumnSpan="3" Fill="Black" Height="1" VerticalAlignment="Bottom"/>
 		
 		<TextBlock Grid.Column="0" Grid.Row="1" Text="Начало занятий "/>
 		<TimePicker Grid.Column="1" Grid.Row="1" SelectedTime="{Binding startDay}"/>

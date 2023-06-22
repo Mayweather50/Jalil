@@ -29,13 +29,12 @@ namespace MySQLConnect.ViewModel
             {
                 return new ActionCommand(() =>
                 {
-                    //if(IP == null || Port == null || Db == null || Name == null || Pass == null)
-                    //{
-                    //    Model.Config.CallNotification(loginWindow, "Не все поля заполнены!");
-                    //    return;
-                    //}
-                    //string connStr = $"Server={IP};Port={Port};Database={Db};Uid={Name};Pwd={Pass};";
-                    string connStr = "Server=127.0.0.1;Port=3306;Database=tabletimedb;Uid=root;Pwd=root;";
+                    if (IP == null || Port == null || Db == null || Name == null || Pass == null)
+                    {
+                        Model.Config.CallNotification(loginWindow, "Не все поля заполнены!");
+                        return;
+                    }
+                    string connStr = $"Server={IP};Port={Port};Database={Db};Uid={Name};Pwd={Pass};";
                     Model.Config.LoadData();
                     if (MySqlHandler.Connect(connStr))
                     {

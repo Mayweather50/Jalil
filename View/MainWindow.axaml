@@ -5,7 +5,7 @@
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
         x:Class="MySQLConnect.View.MainWindow"
-        Title="MainWindow" WindowState="Maximized">
+        Title="Tabletime Creator" WindowState="Maximized">
 	<Window.Styles>
 		<Style Selector="Button">
 			<Setter Property="Margin" Value="0 0 0 0"/>
@@ -55,19 +55,21 @@
 							<TextBlock FontWeight="Bold" Text="Учителя" FontSize="25"/>
 							<TextBlock TextWrapping="Wrap" Text="Выводит всю информацию об учителях"/>
 						</StackPanel>
-						<Button Grid.Row="1" Content="Учебный план" Command="{Binding ShowGrid}">
+						<Button Grid.Row="1" Command="{Binding ShowGrid}">
 							<Button.CommandParameter>
 								<sys:UInt16>1</sys:UInt16>
 							</Button.CommandParameter>
+							<TextBlock FontSize="20" Text="Учебный план" TextAlignment="Center"/>
 						</Button>
 						<StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
 							<TextBlock FontWeight="Bold" Text="Учебный план" FontSize="25"/>
 							<TextBlock TextWrapping="Wrap" Text="Выводит учебные планы"/>
 						</StackPanel>
-						<Button Grid.Row="2" Content="Тарификация" Command="{Binding ShowGrid}">
+						<Button Grid.Row="2" Command="{Binding ShowGrid}">
 							<Button.CommandParameter>
 								<sys:UInt16>2</sys:UInt16>
 							</Button.CommandParameter>
+							<TextBlock FontSize="20" Text="Тарификация" TextAlignment="Center"/>
 						</Button>
 						<StackPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
 							<TextBlock FontWeight="Bold" Text="Тарификация" FontSize="25"/>
@@ -120,9 +122,9 @@
 					<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
 						<ComboBox VerticalAlignment="Center" Items="{Binding grpList_TableTime}" SelectedItem="{Binding selectGroup_TableTime}"
 								  SelectedIndex="{Binding SelectedIndex}"/>
-						<Button Height="30" Content="GENERATE"
+						<Button Height="30" Content="Сгенерировать"
 								Command="{Binding generateTabletime}" CommandParameter="{ResolveByName TableTime}" FontSize="14"/>
-						<Button Height="30" Content="Edit" FontSize="14" Command="{Binding startEditor}"/>
+						<Button Height="30" Content="Редактировать" FontSize="14" Command="{Binding startEditor}"/>
 						<Button Height="30" Content="&lt;" FontSize="14" Command="{Binding PreviousWeek}"/>
 						<Button Height="30" Content=">" FontSize="14" Command="{Binding NextWeek}"/>
 					</StackPanel>

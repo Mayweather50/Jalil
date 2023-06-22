@@ -4,6 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="MySQLConnect.View.Config.Notification"
-        Title="Notification" Width="300" Height="200">
+        Title="Уведомление" Width="300" Height="200">
 	<TextBlock Grid.Column="1" Text="{Binding NotifText}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 </Window>

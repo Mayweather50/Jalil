@@ -193,7 +193,7 @@ namespace MySQLConnect.ViewModel
             {
                 return new RelayCommand<Grid>((grid) =>
                 {
-                    Tabletime.Start(grid, 0);
+                    Tabletime.Start(grid, 0); // Сделать передачу семестра
                 });
             }
         }

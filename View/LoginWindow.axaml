@@ -5,7 +5,7 @@
 		xmlns:local="clr-namespace:MySQLConnect"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="420"
         x:Class="MySQLConnect.LoginWindow"
-        Title="Connect to Server" Width="600" Height="420" CanResize="False">
+        Title="Подключение к серверу" Width="600" Height="420" CanResize="False">
 	<Window.Styles>
 		<Style Selector="TextBox">
 			<Setter Property="Margin" Value="0 0 0 10"/>
@@ -15,21 +15,20 @@
 		</Style>
 	</Window.Styles>
 	<Grid RowDefinitions="100, *">
-		<Rectangle Grid.Row="0" Fill="#d10089"/>
-		<TextBlock Text="--Welcome--" Grid.Row="0"
+		<TextBlock Text="--Добро пожаловать--" Grid.Row="0"
 	   HorizontalAlignment="Center" FontSize="35" VerticalAlignment="Center"
 				   FontWeight="Bold"/>
-		<Rectangle Grid.Row="1" Fill="Gray"/>
-		<StackPanel Grid.Row="1" VerticalAlignment="Center" Background="Gray">
+		<Rectangle Grid.Row="1" Fill="Black" Height="1" VerticalAlignment="Top"/>
+		<StackPanel Grid.Row="1" VerticalAlignment="Center">
 			<TextBox Text="{Binding IP}" Watermark="IP" />
 			<TextBox Text="{Binding Port}" Watermark="Port"/>
 			<TextBox Text="{Binding Db}" Watermark="Database" />
 			<TextBox Text="{Binding Name}" Watermark="Name" />
 			<TextBox Text="{Binding Pass}" Watermark="Password" PasswordChar="*"/>
-			<Button Content="Connect" HorizontalAlignment="Center"
+			<Button Content="Подключиться" HorizontalAlignment="Center"
 					Width="150" Height="40" HorizontalContentAlignment="Center"
-					VerticalContentAlignment="Center" FontSize="20"
-					Command="{Binding ConnectClick}" Background="#d10089"/>
+					VerticalContentAlignment="Center" FontSize="14"
+					Command="{Binding ConnectClick}"/>
 		</StackPanel>
 	</Grid>
 </Window>
