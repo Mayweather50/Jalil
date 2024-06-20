@@ -19,6 +19,7 @@ namespace MySQLConnect.ViewModel.Add
         public string Code { get; set; }
         public string Name { get; set; }
 
+
         public ICommand AddSpec
         {
             get

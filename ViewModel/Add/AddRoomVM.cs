@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using MySQLConnect.Core;
 using MySQLConnect.Model.Core;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -34,7 +35,8 @@ namespace MySQLConnect.ViewModel.Add
             {
                 return new ActionCommand(() =>
                 {
-                    if(!MySqlHandler.CheckDupl("rooms", "number", Number)) MySqlHandler.WriteRoom(Name, Number, (string)selectItem.Content);
+                    Console.WriteLine("AddRoom command is called");
+                    if (!MySqlHandler.CheckDupl("rooms", "number", Number)) MySqlHandler.WriteRoom(Name, Number, (string)selectItem.Content);
                     thisWindow.Close();
                 });
             }

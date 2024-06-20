@@ -37,10 +37,8 @@ namespace MySQLConnect.Model.Core
         }
         private static void CreateTables()// Создание таблиц при начальном запуске приложения
         {
-            string states = "create table if not exists `states`(id int primary key auto_increment,`name` varchar(15) not null); " +
-                "insert into `states`(`name`) values('Работает'), ('На больничном'), ('В командировке');";
-            string roomTypes = "create table if not exists `roomtypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
-                "insert into `roomtypes`(`name`) values('Лекционный'), ('Компьютерный'), ('Спортзал');";
+            string states = "create table if not exists `states`(id int primary key auto_increment,`name` varchar(15) not null);";
+            string roomTypes = "create table if not exists `roomtypes`(id int primary key auto_increment,`name` varchar(20) not null);";
             //string specialtyTypes = "create table if not exists `specialitytypes`(id int primary key auto_increment,`name` varchar(20) not null); " +
             //    "insert into `specialitytypes`(`name`) values('Профессиональный'), ('Специалиальный'), ('Коррекционый');";
             string subjects = "create table if not exists `subjects`(id int primary key auto_increment,`name` varchar(100) not null unique,allhourbudjet smallint not null default 0," +
@@ -70,7 +68,55 @@ namespace MySQLConnect.Model.Core
                 cmd = new MySqlCommand(commands[i], conn);
                 cmd.ExecuteNonQuery();
             }
+
+            List<string> stateNames = new List<string>() { "Работает", "На больничном", "В командировке" };
+            foreach (string stateName in stateNames)
+            {
+                AddState(stateName);
+            }
+
+            List<string> roomTypeNames = new List<string>() { "Лекционный", "Компьютерный", "Спортзал" };
+            foreach (string roomTypeName in roomTypeNames)
+            {
+                AddRoomType(roomTypeName);
+            }
+
+
         }
+
+        public static void AddState(string stateName)
+        {
+            string query = $"SELECT COUNT(*) FROM states WHERE name = '{stateName}'";
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+            if (count == 0)
+            {
+                // Запись с таким именем еще не существует, добавляем новую запись
+                string insertQuery = $"INSERT INTO states (name) VALUES ('{stateName}')";
+                MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn);
+                insertCmd.ExecuteNonQuery();
+            }
+        }
+
+        public static void AddRoomType(string typeName)
+        {
+            string query = $"SELECT COUNT(*) FROM roomtypes WHERE name = '{typeName}'";
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+            if (count == 0)
+            {
+                // Запись с таким именем еще не существует, добавляем новую запись
+                string insertQuery = $"INSERT INTO roomtypes (name) VALUES ('{typeName}')";
+                MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn);
+                insertCmd.ExecuteNonQuery();
+            }
+        }
+
+
+
+
         public static void GetAllGroupsId() // Получение всех id'шников групп
         {
             MySqlCommand cmd = new MySqlCommand() { Connection = conn };
