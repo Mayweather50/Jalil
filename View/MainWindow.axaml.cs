@@ -1,25 +1,36 @@
 using Avalonia.Controls;
+using MySQLConnect.Core;
 using MySQLConnect.Model.Core;
+using MySQLConnect.MySQLConnect;
 using MySQLConnect.ViewModel;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace MySQLConnect.View
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+       
+
+      
+
+        #region INotifyPropertyChanged Implementation
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
         public MainWindow()
         {
-            InitializeComponent();
-            Model.Config.rootWindow = this;
-            DataContext = new MainWindowVM();
-            this.Opened += (s, e) =>
-            {
-                Tabletime.JsonLoad(this);
-            };
-            this.Closing += (s, e) => // Отключение от сервера
-            {
-                Tabletime.JsonSave();
-                MySqlHandler.conn.Close();
-            };
+            InitializeComponent();     
+            DataContext = new MainWindowViewModel();
         }
     }
 }
