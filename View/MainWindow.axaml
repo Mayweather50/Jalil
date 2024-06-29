@@ -2,28 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:sys="clr-namespace:System;assembly=mscorlib"
+		
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
         x:Class="MySQLConnect.View.MainWindow"
         Title="Tabletime Creator" WindowState="Maximized">
 	<Window.Styles>
-		<Style Selector="Button">
-			<Setter Property="Margin" Value="0 0 0 0"/>
-			<Setter Property="FontSize" Value="25"/>
-			<Setter Property="Width" Value="150"/>
-			<Setter Property="Height" Value="150"/>
-			<Setter Property="HorizontalContentAlignment" Value="Center"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="VerticalContentAlignment" Value="Center"/>
-		</Style>
-		<Style Selector="TextBlock">
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="TextWrapping" Value="Wrap"/>
-		</Style>
-		<Style Selector="DataGrid">
-			<Setter Property="CanUserResizeColumns" Value="True"/>
-			<Setter Property="IsReadOnly" Value="True"/>
-		</Style>
+		<!-- Ваши стили здесь -->
 	</Window.Styles>
 	<TabControl>
 		<TabItem>
@@ -33,20 +18,20 @@
 			<Grid RowDefinitions="30,*" ShowGridLines="True">
 				<Menu Grid.Row="0">
 					<MenuItem Header="Добавить">
-						<MenuItem Header="Группа" Command="{Binding AddGroup}"/>
-						<MenuItem Header="Специальность" Command="{Binding AddSpec}"/>
-						<MenuItem Header="Кабинет" Command="{Binding AddRoom}"/>
-						<MenuItem Header="Преподаватель" Command="{Binding AddTchr}"/>
+						<MenuItem Header="Группа" Command="{Binding AddGroupCommand}"/>
+						<MenuItem Header="Специальность" Command="{Binding AddSpecCommand}"/>
+						<MenuItem Header="Кабинет" Command="{Binding AddRoomCommand}"/>
+						<MenuItem Header="Преподаватель" Command="{Binding AddTchrCommand}"/>
 					</MenuItem>
 					<MenuItem Header="Загрузить">
-						<MenuItem Header="Рабочая программа" Command="{Binding LoadProgram}"/>
-						<MenuItem Header="Тарификация" Command="{Binding AddTarif}"/>
-						<MenuItem Header="Учебный план" Command="{Binding AddPlan}"/>
+						<MenuItem Header="Рабочая программа" Command="{Binding LoadProgramCommand}"/>
+						<MenuItem Header="Тарификация" Command="{Binding AddTarifCommand}"/>
+						<MenuItem Header="Учебный план" Command="{Binding AddPlanCommand}"/>
 					</MenuItem>
 				</Menu>
 				<Grid Grid.Row="1" ShowGridLines="False" ColumnDefinitions="500,*">
 					<Grid Grid.Column="0" ShowGridLines="False" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*">
-						<Button Grid.Row="0" Content="Учителя" Command="{Binding ShowGrid}">
+						<Button Grid.Row="0" Content="Учителя" Command="{Binding ShowGridCommand}">
 							<Button.CommandParameter>
 								<sys:UInt16>0</sys:UInt16>
 							</Button.CommandParameter>
@@ -55,7 +40,7 @@
 							<TextBlock FontWeight="Bold" Text="Учителя" FontSize="25"/>
 							<TextBlock TextWrapping="Wrap" Text="Выводит всю информацию об учителях"/>
 						</StackPanel>
-						<Button Grid.Row="1" Command="{Binding ShowGrid}">
+						<Button Grid.Row="1" Command="{Binding ShowGridCommand}">
 							<Button.CommandParameter>
 								<sys:UInt16>1</sys:UInt16>
 							</Button.CommandParameter>
@@ -65,7 +50,7 @@
 							<TextBlock FontWeight="Bold" Text="Учебный план" FontSize="25"/>
 							<TextBlock TextWrapping="Wrap" Text="Выводит учебные планы"/>
 						</StackPanel>
-						<Button Grid.Row="2" Command="{Binding ShowGrid}">
+						<Button Grid.Row="2" Command="{Binding ShowGridCommand}">
 							<Button.CommandParameter>
 								<sys:UInt16>2</sys:UInt16>
 							</Button.CommandParameter>
@@ -75,7 +60,7 @@
 							<TextBlock FontWeight="Bold" Text="Тарификация" FontSize="25"/>
 							<TextBlock TextWrapping="Wrap" Text="Выводит тарификацию"/>
 						</StackPanel>
-						<Button Grid.Row="3" Content="Группы" Command="{Binding ShowGrid}">
+						<Button Grid.Row="3" Content="Группы" Command="{Binding ShowGridCommand}">
 							<Button.CommandParameter>
 								<sys:UInt16>3</sys:UInt16>
 							</Button.CommandParameter>
@@ -87,13 +72,13 @@
 					</Grid>
 					<DataGrid x:Name="TestDataGrid" Items="{Binding dataGrid}" Grid.Column="1" IsVisible="True" AutoGenerateColumns="True">
 						<!--<DataGrid.Columns>
-							<DataGridTextColumn Header="Учитель" Binding="{Binding Teacher}"/>
-							<DataGridTextColumn Header="Предмет" Binding="{Binding Subject}"/>
-							<DataGridTextColumn Header="Группа" Binding="{Binding Group}"/>
-							<DataGridTextColumn Header="Теория" Binding="{Binding Theory}"/>
-							<DataGridTextColumn Header="Деление по группам" Binding="{Binding Division}"/>
-							<DataGridTextColumn Header="Консультация" Binding="{Binding Consultation}"/>
-						</DataGrid.Columns>-->
+                            <DataGridTextColumn Header="Учитель" Binding="{Binding Teacher}"/>
+                            <DataGridTextColumn Header="Предмет" Binding="{Binding Subject}"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding Group}"/>
+                            <DataGridTextColumn Header="Теория" Binding="{Binding Theory}"/>
+                            <DataGridTextColumn Header="Деление по группам" Binding="{Binding Division}"/>
+                            <DataGridTextColumn Header="Консультация" Binding="{Binding Consultation}"/>
+                        </DataGrid.Columns>-->
 					</DataGrid>
 				</Grid>
 			</Grid>
@@ -102,34 +87,44 @@
 			<TabItem.Header>
 				<TextBlock Text="Расписание"/>
 			</TabItem.Header>
-				<Grid RowDefinitions="30,*,30" ShowGridLines="False">
-					<Menu Grid.Row="0" VerticalAlignment="Top">
-						<MenuItem Header="Настройки">
-							<MenuItem Header="Время" Command="{Binding EditTime}"/>
-							<MenuItem Header="Экспорт расписания" Command="{Binding ExportTabletime}"/>
-							<MenuItem Header="Экспорт недели" Command="{Binding ExportWeek}"/>
-						</MenuItem>
-					</Menu>
-					<Grid x:Name="TableTime" ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="50,*,*,*,*,*,*,*,*"
-						  ShowGridLines="True" Grid.Row="1">
-						<TextBlock HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Text="Понедельник"/>
-						<TextBlock HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="Вторник"/>
-						<TextBlock HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0" Text="Среда"/>
-						<TextBlock HorizontalAlignment="Center" Grid.Column="3" Grid.Row="0" Text="Четверг"/>
-						<TextBlock HorizontalAlignment="Center" Grid.Column="4" Grid.Row="0" Text="Пятница"/>
-						<TextBlock HorizontalAlignment="Center" Grid.Column="5" Grid.Row="0" Text="Суббота"/>
-					</Grid>
-					<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
-						<ComboBox VerticalAlignment="Center" Items="{Binding grpList_TableTime}" SelectedItem="{Binding selectGroup_TableTime}"
-								  SelectedIndex="{Binding SelectedIndex}"/>
-						<Button Height="30" Content="Сгенерировать"
-								Command="{Binding generateTabletime}" CommandParameter="{ResolveByName TableTime}" FontSize="14"/>
-						<Button Height="30" Content="Редактировать" FontSize="14" Command="{Binding startEditor}"/>
-						<Button Height="30" Content="&lt;" FontSize="14" Command="{Binding PreviousWeek}"/>
-						<Button Height="30" Content=">" FontSize="14" Command="{Binding NextWeek}"/>
-					</StackPanel>
-				</Grid>
-		</TabItem>
-		</TabControl>
-</Window>
+			<Grid RowDefinitions="30,*,30" ShowGridLines="False">
+				<Menu Grid.Row="0" VerticalAlignment="Top">
+					<MenuItem Header="Настройки">
+						<MenuItem Header="Время" Command="{Binding EditTime}"/>
+						<MenuItem Header="Экспорт расписания" Command="{Binding ExportTabletime}"/>
+						<MenuItem Header="Экспорт недели" Command="{Binding ExportWeek}"/>
+					</MenuItem>
+				</Menu>
+				<Grid x:Name="TableTime" ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="50,*,*,*,*,*,*,*,*" ShowGridLines="True" Grid.Row="1">
+					<TextBlock HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Text="Понедельник"/>
+					<TextBlock HorizontalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="Вторник"/>
+					<TextBlock HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0" Text="Среда"/>
+					<TextBlock HorizontalAlignment="Center" Grid.Column="3" Grid.Row="0" Text="Четверг"/>
+					<TextBlock HorizontalAlignment="Center" Grid.Column="4" Grid.Row="0" Text="Пятница"/>
+					<TextBlock HorizontalAlignment="Center" Grid.Column="5" Grid.Row="0" Text="Суббота"/>
 
+					<!-- DataGrid для отображения расписания -->
+					<DataGrid Items="{Binding ScheduleItems}" AutoGenerateColumns="False" Grid.Row="1" Grid.ColumnSpan="6">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Понедельник" Binding="{Binding Monday}" Width="*"/>
+							<DataGridTextColumn Header="Вторник" Binding="{Binding Tuesday}" Width="*"/>
+							<DataGridTextColumn Header="Среда" Binding="{Binding Wednesday}" Width="*"/>
+							<DataGridTextColumn Header="Четверг" Binding="{Binding Thursday}" Width="*"/>
+							<DataGridTextColumn Header="Пятница" Binding="{Binding Friday}" Width="*"/>
+							<DataGridTextColumn Header="Суббота" Binding="{Binding Saturday}" Width="*"/>
+						</DataGrid.Columns>
+					</DataGrid>
+				</Grid>
+				<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
+					<ComboBox VerticalAlignment="Center" Items="{Binding grpList_TableTime}" SelectedItem="{Binding selectGroup_TableTime}" SelectedIndex="{Binding SelectedIndex}"/>
+					<Button Height="30" Content="Сгенерировать" Command="{Binding GenerateTabletimeCommand}" CommandParameter="{Binding ElementName=TableTime}" FontSize="14"/>
+					<Button Height="30" Content="Редактировать" FontSize="14" Command="{Binding startEditor}"/>
+					<Button Height="30" Content="&lt;" FontSize="14" Command="{Binding PreviousWeek}"/>
+					<Button Height="30" Content=">" FontSize="14" Command="{Binding NextWeek}"/>
+				</StackPanel>
+			</Grid>
+		</TabItem>
+
+
+	</TabControl>
+</Window>

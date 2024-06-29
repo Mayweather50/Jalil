@@ -1,20 +1,42 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace MySQLConnect.Model.Core
 {
     public static class CSVReader
     {
-        static private string[] allData;
+        //static private string[] allData;
+        public static List<string> allData = new List<string>();
         static private List<int> semestrIndex = new List<int>();
         static private List<int> countTypes = new List<int>();
         static public Dictionary<int, List<Subject>> plan = new Dictionary<int, List<Subject>>();
         static private int startRow;
         public static void Read(string path, string group)
         {
-            allData = File.ReadAllLines(path);
+           
+
+
+            allData.Add("\"Семестр\", \"Предмет\", \"Преподаватель\", \"Время\", \"Период\"");
+            allData.Add("\"1 семестр\", \"Математика\", \"Иванов И.И.\", \"Пн 9:00\", \"12 нед\"");
+            allData.Add("\"1 семестр\", \"Физика\", \"Петров П.П.\", \"Ср 11:00\", \"14 нед\"");
+            allData.Add("\"2 семестр\", \"Программирование\", \"Сидоров С.С.\", \"Пт 14:00\", \"10 нед\"");
+
+
+
+
+            //using (StreamReader sr = new StreamReader(path, Encoding.GetEncoding(1251)))
+            //{
+            //    string line;
+            //    while ((line = sr.ReadLine()) != null)
+            //    {
+            //        allData.Add(line);
+            //    }
+            //}
+
             FindSemestrIndex();
-            for (int row = startRow; row < allData.Length; row++)
+            for (int row = startRow; row < allData.ToArray().Length; row++)
             {
                 string[] line = allData[row].Split(',');
                 if (line[0].Contains('.'))
@@ -82,38 +104,58 @@ namespace MySQLConnect.Model.Core
         }
         private static void FindSemestrIndex()
         {
-            startRow = 8;
+            startRow = 8; // Начальная строка
+            if (allData.Count < startRow)
+            {
+                startRow = allData.Count; // Обработка случая, когда данных меньше, чем startRow
+            }
+
             for (int row = 0; row < startRow; row++)
             {
                 string[] line = allData[row].Split(',');
                 for (int column = 0; column < line.Length; column++)
                 {
-                    if (line[column] == "") continue;
-                    if (line[column].EndsWith("нед"))
+                    if (line[column].Trim() == "") continue;
+                    Console.WriteLine("Вывод: " + line[column]);
+                    if (line[column].Trim().EndsWith("нед"))
                     {
                         startRow = row;
                         semestrIndex.Add(column);
                     }
                 }
             }
-            FindLessonType();
+            if (semestrIndex.Count > 0)
+            {
+                FindLessonType();
+            }
+            else
+            {
+                Console.WriteLine("Не найдено ни одного столбца, заканчивающегося на 'нед'.");
+            }
         }
+
         private static void FindLessonType()
         {
-            startRow += 2;
+            startRow += 2; // Переход к строке после "стартовой"
+            if (startRow >= allData.Count)
+            {
+                Console.WriteLine("Значение startRow превышает количество строк в данных.");
+                return;
+            }
             string[] line = allData[startRow].Split(",");
             int counter = 0;
             int column = semestrIndex[0];
             do
             {
-                string value = line[column];
+                string value = line[column].Trim();
                 if (value != "")
                 {
                     if (value.StartsWith("\""))
                     {
-                        value += $",{line[column + 1]}";
+                        value += $",{line[column + 1].Trim()}";
                         line[column + 1] = "";
-                        if (counter != 0) countTypes.Add(counter);
+                        if (counter != 0)
+                            countTypes.Add(counter);
                         counter = 0;
                     }
                     counter++;
